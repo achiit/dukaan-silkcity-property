@@ -1,0 +1,209 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>SILKCITY PROPERTY – Plots & Land</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🏡%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{navy:'#0B1F3A',navy2:'#13305A',gold:'#C9A24B'},fontFamily:{serif:['Fraunces','serif'],sans:['Figtree','sans-serif']}}}}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
+</head><body class="font-sans text-slate-800 bg-white"><div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useMemo}=React;
+const PH1='9861248648',PH2='9861731688',MAIL='ranjan3313@gmail.com';
+const HERO="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='700' preserveAspectRatio='none'%3E%3Crect width='1600' height='700' fill='%23274b6e'/%3E%3Cpath d='M0 420 400 330 900 400 1600 300V700H0z' fill='%2331603f'/%3E%3Cpath d='M0 520 500 450 1100 520 1600 440V700H0z' fill='%23497d44'/%3E%3Cpath d='M300 700 700 470M900 700 1000 480M1400 700 1250 470' stroke='%23c9a24b' stroke-width='3' opacity='.6'/%3E%3C/svg%3E";
+const NOIMG='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect fill="#e8edf4" width="600" height="400"/><text x="300" y="205" text-anchor="middle" fill="#8a9bb5" font-family="sans-serif" font-size="22">Photo coming soon</text></svg>');
+const inr=n=>'₹'+Number(n).toLocaleString('en-IN');
+const priceOf=p=>p.price_on_request||p.price==null?'Price on Request':inr(p.price);
+const wa=t=>`https://wa.me/91${PH1}?text=${encodeURIComponent(t)}`;
+const waProp=p=>wa(`Hello Silkcity Property, I am interested in Plot ${p.plot_id}. Please provide the price, availability and location details.`);
+const mainPhoto=p=>(p.photos.find(x=>x.is_main)||p.photos[0])?.url||NOIMG;
+
+/* ---- Demo data layer: stands in for the Express/PostgreSQL API in this hosted preview ---- */
+const plotImg=(c1,c2,t)=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520"><rect width="800" height="520" fill="${c1}"/><path d="M0 330 250 260 520 320 800 240V520H0z" fill="${c2}"/><path d="M0 430 800 380V520H0z" fill="#0B1F3A" opacity=".35"/><text x="400" y="150" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="34" opacity=".9">${t}</text></svg>`);
+const SEED=()=>[
+ {id:1,plot_id:'RR-001',title:'Corner Plot near Highway',location:'Rajarhat',size_sqft:1500,price:3200000,price_on_request:false,price_per_sqft:2133,description:'Level corner plot with clear title, ideal for a family home.',road_width:'30 ft',facing:'East',amenities:'Water supply, Electricity, Drainage, Gated approach',landmarks:'Highway 1.2 km, School 800 m, Market 2 km',maps_url:'',status:'AVAILABLE',photos:[{id:1,url:plotImg('#2d5b8a','#3f7a4a','Plot RR-001'),is_main:true},{id:2,url:plotImg('#41678f','#5a8f4f','Plot RR-001 – road view'),is_main:false}]},
+ {id:2,plot_id:'RR-002',title:'Residential Plot, Quiet Lane',location:'Rajarhat',size_sqft:900,price:1850000,price_on_request:false,price_per_sqft:2055,description:'Compact plot in a peaceful residential pocket.',road_width:'20 ft',facing:'North',amenities:'Water supply, Electricity',landmarks:'Park 500 m, Bus stop 600 m',maps_url:'',status:'AVAILABLE',photos:[{id:3,url:plotImg('#35618a','#4a7f45','Plot RR-002'),is_main:true}]},
+ {id:3,plot_id:'SC-014',title:'Premium Large Plot',location:'Silkcity Main Road',size_sqft:2400,price:null,price_on_request:true,price_per_sqft:null,description:'Large premium plot suited to a villa or small project.',road_width:'40 ft',facing:'West',amenities:'Water supply, Electricity, Drainage, Street lights',landmarks:'Hospital 1 km, Mall 3 km',maps_url:'',status:'BOOKED',photos:[{id:4,url:plotImg('#1f4a74','#2f6a47','Plot SC-014'),is_main:true}]},
+ {id:4,plot_id:'SC-009',title:'Garden-Facing Plot',location:'Silkcity Main Road',size_sqft:1200,price:2760000,price_on_request:false,price_per_sqft:2300,description:'Sold to a local family.',road_width:'25 ft',facing:'South',amenities:'Water supply, Electricity',landmarks:'Garden opposite',maps_url:'',status:'SOLD',photos:[{id:5,url:plotImg('#4a6a85','#6a8a5a','Plot SC-009'),is_main:true}]}];
+const DB={load(){try{const r=localStorage.getItem('sc_demo');if(r)return JSON.parse(r)}catch{}return{ps:SEED(),bk:[],en:[],n:100}},save(d){try{localStorage.setItem('sc_demo',JSON.stringify(d))}catch{}}};
+let _d=DB.load();const sv=()=>DB.save(_d);
+const readFile=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result);x.readAsDataURL(f)});
+const api=async(u,o={},tok)=>{
+ const M=(o.method||'GET').toUpperCase(),body=o.body instanceof FormData?o.body:o.body?JSON.parse(o.body):{},seg=u.split('/').filter(Boolean);
+ const fail=m=>{throw new Error(m)},id=Number(seg[seg.length-1])||Number(seg[2]),nid=()=>++_d.n;
+ const ph=v=>/^[0-9+\-\s]{8,15}$/.test(v||'');
+ if(seg[0]==='properties'){if(seg[1]){const p=_d.ps.find(x=>x.id==seg[1]);return p||fail('Not found')}return [..._d.ps].reverse()}
+ if(u==='/bookings'&&M==='POST'){if(!body.name||!ph(body.phone)||!body.property_id||!body.visit_date)fail('Name, valid phone, property and date are required.');
+  const p=_d.ps.find(x=>x.id==body.property_id);if(!p)fail('Property not found');if(p.status!=='AVAILABLE')fail(`This property is ${p.status} and cannot be booked.`);
+  _d.bk.unshift({...body,id:nid(),plot_id:p.plot_id,status:'NEW',created_at:new Date().toISOString()});sv();return{ok:true}}
+ if(u==='/enquiries'&&M==='POST'){if(!body.name||!ph(body.phone))fail('Name and valid phone are required.');_d.en.unshift({...body,id:nid(),status:'NEW',created_at:new Date().toISOString()});sv();return{ok:true}}
+ if(u==='/admin/login'){if(body.email==='admin@silkcity.demo'&&body.password==='demo123')return{token:'demo'};fail('Invalid email or password')}
+ if(seg[0]==='admin'){if(tok!=='demo')fail('Unauthorized');const k=seg[1];
+  if(k==='stats'){const c=s=>_d.ps.filter(p=>p.status===s).length;return{total:_d.ps.length,available:c('AVAILABLE'),booked:c('BOOKED'),sold:c('SOLD'),bookings:_d.bk.length,enquiries:_d.en.filter(e=>e.status==='NEW').length}}
+  if(k==='bookings'||k==='enquiries'){const L=k==='bookings'?_d.bk:_d.en;if(M==='GET')return L;L.find(x=>x.id==seg[2]).status=body.status;sv();return{ok:true}}
+  if(k==='properties'){const num=v=>v===''||v==null?null:Number(v);
+   const fix=b=>({...b,size_sqft:num(b.size_sqft),price:num(b.price),price_per_sqft:num(b.price_per_sqft),price_on_request:!!b.price_on_request});
+   if(M==='POST'&&!seg[2]){if(!body.plot_id||!body.title||!body.location||!body.size_sqft)fail('Plot ID, title, location and size are required');
+    if(_d.ps.some(p=>p.plot_id===body.plot_id))fail('Plot ID already exists');const p={...fix(body),id:nid(),photos:[]};_d.ps.push(p);sv();return{id:p.id}}
+   const p=_d.ps.find(x=>x.id==seg[2]);
+   if(M==='PUT'){Object.assign(p,fix(body),{id:p.id,photos:p.photos});sv();return{ok:true}}
+   if(M==='DELETE'){_d.ps=_d.ps.filter(x=>x!==p);sv();return{ok:true}}
+   if(seg[3]==='status'){p.status=body.status;sv();return{ok:true}}
+   if(seg[3]==='photos'){const fs=body.getAll('photos');for(const f of fs){p.photos.push({id:nid(),url:await readFile(f),is_main:!p.photos.some(x=>x.is_main)})}sv();return{ok:true}}}
+  if(k==='photos'){const pid=seg[2];const p=_d.ps.find(x=>x.photos.some(f=>f.id==pid));
+   if(seg[3]==='main')p.photos.forEach(f=>f.is_main=f.id==pid);else{p.photos=p.photos.filter(f=>f.id!=pid);if(p.photos.length&&!p.photos.some(f=>f.is_main))p.photos[0].is_main=true}sv();return{ok:true}}}
+ fail('Not found')};
+
+const useHash=()=>{const [h,setH]=useState(location.hash.slice(1)||'/');useEffect(()=>{const f=()=>{setH(location.hash.slice(1)||'/');scrollTo(0,0)};addEventListener('hashchange',f);return()=>removeEventListener('hashchange',f)},[]);return h};
+
+const Logo=({light})=><a href="#/" className="flex items-center gap-3">
+ <svg width="44" height="44" viewBox="0 0 48 48"><rect width="48" height="48" rx="10" fill="#0B1F3A"/><path d="M8 24 24 10l16 14" fill="none" stroke="#C9A24B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 23v15h20V23" fill="#fff"/><rect x="21" y="29" width="6" height="9" fill="#0B1F3A"/><path d="M5 41h38" stroke="#C9A24B" strokeWidth="2.5" strokeLinecap="round"/></svg>
+ <span className={`font-serif leading-none ${light?'text-white':'text-navy'}`}><b className="text-xl tracking-wide">SILKCITY</b><br/><span className="text-gold text-xs tracking-[.35em]">PROPERTY</span></span></a>;
+
+const Badge=({s})=><span className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${s==='AVAILABLE'?'bg-emerald-600':s==='BOOKED'?'bg-amber-600':'bg-red-700'}`}>{s}</span>;
+const Btn=({href,onClick,children,variant='gold',disabled,className=''})=>{const c={gold:'bg-gold text-navy hover:bg-[#d8b35c]',navy:'bg-navy text-white hover:bg-navy2',green:'bg-emerald-600 text-white hover:bg-emerald-700',line:'border border-white/70 text-white hover:bg-white/10',red:'bg-red-700 text-white'}[variant];
+ const cls=`inline-flex justify-center items-center px-5 py-2.5 rounded-lg font-semibold text-sm transition ${c} ${disabled?'opacity-40 pointer-events-none':''} ${className}`;
+ return href?<a href={href} className={cls}>{children}</a>:<button onClick={onClick} className={cls} disabled={disabled}>{children}</button>};
+
+function Header(){const [o,setO]=useState(false);const L=[['/','Home'],['/properties','Properties'],['/about','About'],['/contact','Contact']];
+ return <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b"><div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+ <Logo/><nav className="hidden md:flex items-center gap-7 text-sm font-medium">{L.map(([h,t])=><a key={h} href={'#'+h} className="hover:text-gold">{t}</a>)}<Btn href="#/book">Book a Site Visit</Btn></nav>
+ <button className="md:hidden p-2" aria-label="Menu" onClick={()=>setO(!o)}>☰</button></div>
+ {o&&<div className="md:hidden px-4 pb-4 grid gap-3" onClick={()=>setO(false)}>{L.map(([h,t])=><a key={h} href={'#'+h}>{t}</a>)}<Btn href="#/book">Book a Site Visit</Btn></div>}</header>}
+
+function Footer(){return <footer className="bg-navy text-white/80 mt-16"><div className="max-w-6xl mx-auto px-4 py-12 grid md:grid-cols-4 gap-8 text-sm">
+ <div><Logo light/><p className="mt-4 italic">Find the right property for your future.</p></div>
+ <div className="grid gap-2"><b className="text-gold">Links</b>{[['/','Home'],['/properties','Properties'],['/about','About'],['/contact','Contact'],['/book','Book Site Visit']].map(([h,t])=><a key={h} href={'#'+h}>{t}</a>)}</div>
+ <div className="grid gap-2"><b className="text-gold">Call</b><a href={'tel:'+PH1}>{PH1}</a><a href={'tel:'+PH2}>{PH2}</a><a href={'mailto:'+MAIL}>{MAIL}</a></div>
+ <div className="grid gap-2"><b className="text-gold">WhatsApp</b><a href={wa('Hello Silkcity Property, I would like to know more about your properties.')}>{PH1}</a><a href="#/admin" className="text-white/40 text-xs mt-4">Admin</a></div></div>
+ <div className="border-t border-white/10 text-center py-4 text-xs">© 2026 Silkcity Property. All Rights Reserved.</div></footer>}
+
+function Card({p}){const open=p.status==='AVAILABLE';
+ return <div className="bg-white rounded-xl border shadow-sm overflow-hidden flex flex-col">
+ <div className="relative"><img src={mainPhoto(p)} alt={p.title} loading="lazy" className={`h-52 w-full object-cover ${p.status==='SOLD'?'grayscale':''}`}/><div className="absolute top-3 left-3"><Badge s={p.status}/></div></div>
+ <div className="p-4 flex-1 flex flex-col gap-1"><div className="text-xs text-gold font-semibold">Plot {p.plot_id}</div>
+ <h3 className="font-serif text-lg text-navy">{p.title}</h3><div className="text-sm text-slate-500">{p.location} · {Number(p.size_sqft).toLocaleString('en-IN')} sq.ft</div>
+ <div className="text-xl font-bold text-navy mt-1">{priceOf(p)}</div>
+ <div className="grid grid-cols-3 gap-2 mt-auto pt-3"><Btn href={'#/property/'+p.id} variant="navy" className="!px-2">Details</Btn><Btn href={waProp(p)} variant="green" className="!px-2">WhatsApp</Btn><Btn href={'#/book?p='+p.id} disabled={!open} className="!px-2">{open?'Book Visit':p.status}</Btn></div></div></div>}
+
+const useProps=()=>{const [l,setL]=useState(null);useEffect(()=>{api('/properties').then(setL).catch(()=>setL([]))},[]);return l};
+
+function Home(){const ps=useProps();const av=(ps||[]).filter(p=>p.status!=='SOLD').slice(0,6),sold=(ps||[]).filter(p=>p.status==='SOLD').slice(0,3);
+ return <>
+ <section className="relative text-white" style={{background:`linear-gradient(105deg,#0B1F3Af0 35%,#0B1F3A80),url(${HERO}) center/cover`}}><div className="max-w-6xl mx-auto px-4 py-24 md:py-36">
+ <h1 className="font-serif text-4xl md:text-6xl max-w-2xl leading-tight">Find the Perfect Property for Your Future</h1>
+ <p className="mt-5 max-w-xl text-white/80">Verified plots in prime locations, with clear pricing and honest guidance from first visit to registration.</p>
+ <div className="mt-8 flex flex-wrap gap-3"><Btn href="#/properties">View Available Plots</Btn><Btn href="#/book" variant="line">Book a Site Visit</Btn></div></div></section>
+ <Section title="Available Properties">{ps===null?<p>Loading…</p>:av.length?<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">{av.map(p=><Card key={p.id} p={p}/>)}</div>:<p className="text-slate-500">New plots are being listed. Call us for current availability.</p>}
+ <div className="mt-8 text-center"><Btn href="#/properties" variant="navy">See all properties</Btn></div></Section>
+ <section className="bg-slate-50 py-14"><Section title="Why Choose Us" bare><div className="grid md:grid-cols-4 gap-5">{[['Clear titles','Every plot is documented and ready for verification before you pay.'],['Transparent prices','Price per sq.ft and total cost shown upfront.'],['Site visits on your schedule','Pick a date and time; we take you to the plot.'],['Support after purchase','We guide you through registration and paperwork.']].map(([t,d])=><div key={t} className="bg-white p-5 rounded-xl border-t-4 border-gold shadow-sm"><b className="text-navy">{t}</b><p className="text-sm text-slate-600 mt-2">{d}</p></div>)}</div></Section></section>
+ <Section title="About Silkcity Property"><p className="max-w-3xl text-slate-600">Silkcity Property helps families and investors buy residential plots with confidence. We keep our listings current, our pricing clear, and our process simple.</p><Btn href="#/about" variant="navy" className="mt-4">Learn more</Btn></Section>
+ {sold.length>0&&<Section title="Recently Sold"><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">{sold.map(p=><Card key={p.id} p={p}/>)}</div></Section>}
+ <Section title="Contact"><ContactBlock/></Section></>}
+
+const Section=({title,children,bare})=><section className={bare?'':'max-w-6xl mx-auto px-4 pt-14'}><div className={bare?'max-w-6xl mx-auto px-4':''}><h2 className="font-serif text-3xl text-navy mb-6">{title}</h2>{children}</div></section>;
+
+function ContactBlock(){return <div className="grid md:grid-cols-2 gap-6"><div className="bg-navy text-white rounded-xl p-6 grid gap-2"><b className="font-serif text-xl text-gold">SILKCITY PROPERTY</b>
+ <div>Phone: <a href={'tel:'+PH1}>{PH1}</a> · <a href={'tel:'+PH2}>{PH2}</a></div><div>WhatsApp: {PH1}</div><div>Email: {MAIL}</div></div>
+ <div className="flex flex-wrap gap-3 items-center"><Btn href={'tel:'+PH1}>Call Now</Btn><Btn href={wa('Hello Silkcity Property, I would like to know more about your properties.')} variant="green">WhatsApp</Btn><Btn href={'mailto:'+MAIL} variant="navy">Email</Btn></div></div>}
+
+function Properties(){const ps=useProps();const [f,setF]=useState({loc:'',price:'',size:'',status:''});
+ const locs=useMemo(()=>[...new Set((ps||[]).map(p=>p.location))],[ps]);
+ const list=(ps||[]).filter(p=>(!f.loc||p.location===f.loc)&&(!f.status||p.status===f.status)
+  &&(!f.price||(p.price!=null&&(f.price==='a'?p.price<2500000:f.price==='b'?p.price>=2500000&&p.price<5000000:p.price>=5000000)))
+  &&(!f.size||(f.size==='a'?p.size_sqft<1000:f.size==='b'?p.size_sqft>=1000&&p.size_sqft<2000:p.size_sqft>=2000)));
+ const S=({k,label,opts})=><select className="border rounded-lg px-3 py-2 bg-white" aria-label={label} value={f[k]} onChange={e=>setF({...f,[k]:e.target.value})}><option value="">{label}</option>{opts.map(([v,t])=><option key={v} value={v}>{t}</option>)}</select>;
+ return <Section title="Properties"><div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+ <S k="loc" label="All locations" opts={locs.map(l=>[l,l])}/><S k="price" label="Any price" opts={[['a','Under ₹25,00,000'],['b','₹25,00,000 – ₹50,00,000'],['c','Above ₹50,00,000']]}/>
+ <S k="size" label="Any size" opts={[['a','Under 1,000 sq.ft'],['b','1,000 – 2,000 sq.ft'],['c','Above 2,000 sq.ft']]}/><S k="status" label="Any status" opts={['AVAILABLE','BOOKED','SOLD'].map(x=>[x,x])}/></div>
+ {ps===null?<p>Loading…</p>:list.length?<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">{list.map(p=><Card key={p.id} p={p}/>)}</div>:<p className="text-slate-500">No properties match these filters. Clear a filter to see more.</p>}</Section>}
+
+function Detail({id}){const [p,setP]=useState(),[i,setI]=useState(0),[err,setErr]=useState();
+ useEffect(()=>{api('/properties/'+id).then(setP).catch(e=>setErr(e.message))},[id]);
+ if(err)return <Section title="Property not found"><Btn href="#/properties">Back to properties</Btn></Section>;if(!p)return <Section title="Loading…"/>;
+ const imgs=p.photos.length?p.photos.map(x=>x.url):[NOIMG],open=p.status==='AVAILABLE';
+ const R=([k,v])=>v?<div key={k} className="flex justify-between border-b py-2 text-sm"><span className="text-slate-500">{k}</span><b>{v}</b></div>:null;
+ return <div className="max-w-6xl mx-auto px-4 pt-10 grid lg:grid-cols-2 gap-8">
+ <div><img src={imgs[i]} className="w-full h-80 object-cover rounded-xl" alt={p.title}/><div className="flex gap-2 mt-3 overflow-x-auto">{imgs.map((u,k)=><img key={k} src={u} onClick={()=>setI(k)} className={`h-16 w-24 object-cover rounded cursor-pointer ${k===i?'ring-2 ring-gold':''}`}/>)}</div>
+ {p.maps_url&&<div className="mt-6">{/embed/.test(p.maps_url)?<iframe src={p.maps_url} className="w-full h-64 rounded-xl border-0" loading="lazy" title="Map"/>:<Btn href={p.maps_url} variant="navy">Open in Google Maps</Btn>}</div>}</div>
+ <div><div className="flex items-center gap-3"><span className="text-gold font-semibold">Plot {p.plot_id}</span><Badge s={p.status}/></div>
+ <h1 className="font-serif text-3xl text-navy mt-1">{p.title}</h1><div className="text-3xl font-bold text-navy my-3">{priceOf(p)}</div>
+ {[['Location',p.location],['Plot size',Number(p.size_sqft).toLocaleString('en-IN')+' sq.ft'],['Price per sq.ft',p.price_per_sqft&&!p.price_on_request?inr(p.price_per_sqft):null],['Road width',p.road_width],['Facing',p.facing]].map(R)}
+ {p.description&&<p className="mt-4 text-slate-600">{p.description}</p>}
+ {p.amenities&&<><h3 className="font-serif text-lg text-navy mt-5">Amenities</h3><ul className="list-disc ml-5 text-sm text-slate-600">{p.amenities.split(/\n|,/).filter(Boolean).map((a,k)=><li key={k}>{a.trim()}</li>)}</ul></>}
+ {p.landmarks&&<><h3 className="font-serif text-lg text-navy mt-5">Nearby landmarks</h3><ul className="list-disc ml-5 text-sm text-slate-600">{p.landmarks.split(/\n|,/).filter(Boolean).map((a,k)=><li key={k}>{a.trim()}</li>)}</ul></>}
+ <div className="grid grid-cols-3 gap-2 mt-6"><Btn href={'tel:'+PH1} variant="navy">Call Now</Btn><Btn href={waProp(p)} variant="green">WhatsApp</Btn><Btn href={'#/book?p='+p.id} disabled={!open}>{open?'Book Site Visit':p.status}</Btn></div>
+ {!open&&<p className="text-sm text-slate-500 mt-2">This plot is {p.status.toLowerCase()} and not open for new visit requests.</p>}</div></div>}
+
+const Field=({label,...r})=><label className="grid gap-1 text-sm font-medium">{label}<input className="border rounded-lg px-3 py-2 font-normal" {...r}/></label>;
+function Book(){const ps=useProps();const pre=new URLSearchParams(location.hash.split('?')[1]||'').get('p')||'';
+ const [d,setD]=useState({property_id:pre}),[done,setDone]=useState(false),[err,setErr]=useState(),[busy,setBusy]=useState(false);const set=k=>e=>setD({...d,[k]:e.target.value});
+ const submit=async()=>{setErr();setBusy(true);try{await api('/bookings',{method:'POST',body:JSON.stringify(d)});setDone(true)}catch(e){setErr(e.message)}setBusy(false)};
+ if(done)return <Section title="Thank you"><p className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 max-w-xl">Your site visit request has been received. Our team will contact you shortly.</p></Section>;
+ return <Section title="Book a Site Visit"><div className="grid gap-4 max-w-xl">
+ <Field label="Name" value={d.name||''} onChange={set('name')} required/><Field label="Phone" type="tel" value={d.phone||''} onChange={set('phone')} required/>
+ <Field label="WhatsApp number" type="tel" value={d.whatsapp||''} onChange={set('whatsapp')}/><Field label="Email" type="email" value={d.email||''} onChange={set('email')}/>
+ <label className="grid gap-1 text-sm font-medium">Select property<select className="border rounded-lg px-3 py-2 font-normal" value={d.property_id} onChange={set('property_id')}><option value="">Choose a plot</option>{(ps||[]).filter(p=>p.status==='AVAILABLE').map(p=><option key={p.id} value={p.id}>{p.plot_id} – {p.location}</option>)}</select></label>
+ <div className="grid grid-cols-2 gap-3"><Field label="Preferred date" type="date" min={new Date().toISOString().slice(0,10)} value={d.visit_date||''} onChange={set('visit_date')}/><Field label="Preferred time" type="time" value={d.visit_time||''} onChange={set('visit_time')}/></div>
+ <label className="grid gap-1 text-sm font-medium">Message<textarea rows="3" className="border rounded-lg px-3 py-2 font-normal" value={d.message||''} onChange={set('message')}/></label>
+ {err&&<p className="text-red-700 text-sm" role="alert">{err}</p>}<Btn onClick={submit} disabled={busy}>{busy?'Sending…':'Request site visit'}</Btn></div></Section>}
+
+function Enquiry(){const [d,setD]=useState({}),[m,setM]=useState();const set=k=>e=>setD({...d,[k]:e.target.value});
+ const go=async()=>{try{await api('/enquiries',{method:'POST',body:JSON.stringify(d)});setM('Thank you. We will get back to you shortly.');setD({})}catch(e){setM(e.message)}};
+ return <div className="grid gap-3 max-w-xl mt-8"><h3 className="font-serif text-xl text-navy">Send an enquiry</h3><Field label="Name" value={d.name||''} onChange={set('name')}/><Field label="Phone" value={d.phone||''} onChange={set('phone')}/><Field label="Email" value={d.email||''} onChange={set('email')}/>
+ <textarea rows="3" placeholder="Message" className="border rounded-lg px-3 py-2" value={d.message||''} onChange={set('message')}/><Btn onClick={go}>Send enquiry</Btn>{m&&<p className="text-sm">{m}</p>}</div>}
+
+/* ---------------- ADMIN ---------------- */
+const EMPTY={plot_id:'',title:'',location:'',size_sqft:'',price:'',price_on_request:false,price_per_sqft:'',description:'',road_width:'',facing:'',amenities:'',landmarks:'',maps_url:'',status:'AVAILABLE'};
+function Admin(){const [tok,setTok]=useState(null),[tab,setTab]=useState('props'),[ps,setPs]=useState([]),[st,setSt]=useState({}),[bk,setBk]=useState([]),[en,setEn]=useState([]),[edit,setEdit]=useState(null),[login,setLogin]=useState({}),[err,setErr]=useState(),[msg,setMsg]=useState();
+ const A=(u,o)=>api('/admin'+u,o,tok);
+ const load=async()=>{try{const [p,s,b,e]=await Promise.all([api('/properties'),A('/stats'),A('/bookings'),A('/enquiries')]);setPs(p);setSt(s);setBk(b);setEn(e)}catch(x){if(x.message==='Unauthorized'){setTok(null)}}};
+ useEffect(()=>{if(tok)load()},[tok]);
+ if(!tok)return <Section title="Admin login"><div className="grid gap-4 max-w-sm"><p className="text-sm bg-amber-50 border border-amber-200 rounded-lg p-3">Preview mode: sign in with admin@silkcity.demo / demo123. Changes are saved in this browser only. The full version uses the secure Express + PostgreSQL backend.</p><Field label="Email" type="email" onChange={e=>setLogin({...login,email:e.target.value})}/><Field label="Password" type="password" onChange={e=>setLogin({...login,password:e.target.value})}/>
+ {err&&<p className="text-red-700 text-sm">{err}</p>}<Btn onClick={async()=>{try{const r=await api('/admin/login',{method:'POST',body:JSON.stringify(login)});setTok(r.token)}catch(e){setErr(e.message)}}}>Log in</Btn></div></Section>;
+ const act=async(fn,ok)=>{try{await fn();setMsg(ok);await load()}catch(e){setMsg(e.message)}};
+ if(edit)return <PropForm p={edit} A={A} onDone={()=>{setEdit(null);load()}} tok={tok}/>;
+ const cards=[['Total Properties',st.total],['Available',st.available],['Booked',st.booked],['Sold',st.sold],['Site Visit Requests',st.bookings],['New Enquiries',st.enquiries]];
+ return <div className="max-w-6xl mx-auto px-4 pt-10"><div className="flex justify-between items-center mb-6"><h1 className="font-serif text-3xl text-navy">Admin Dashboard</h1><Btn variant="navy" onClick={()=>{setTok(null)}}>Log out</Btn></div>
+ <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">{cards.map(([t,v])=><div key={t} className="bg-white border rounded-xl p-4"><div className="text-2xl font-bold text-navy">{v??0}</div><div className="text-xs text-slate-500">{t}</div></div>)}</div>
+ {msg&&<p className="mb-3 text-sm bg-slate-100 rounded p-2">{msg}</p>}
+ <div className="flex gap-2 mb-4">{[['props','Properties'],['bk','Bookings'],['en','Enquiries']].map(([k,t])=><button key={k} onClick={()=>setTab(k)} className={`px-4 py-2 rounded-lg text-sm font-semibold ${tab===k?'bg-navy text-white':'bg-slate-100'}`}>{t}</button>)}</div>
+ {tab==='props'&&<><Btn onClick={()=>setEdit(EMPTY)} className="mb-4">Add property</Btn><div className="overflow-x-auto border rounded-xl"><table className="w-full text-sm"><thead className="bg-slate-50 text-left"><tr>{['Plot ID','Location','Size','Price','Status','Photos','Actions'].map(h=><th key={h} className="p-3">{h}</th>)}</tr></thead><tbody>
+ {ps.map(p=><tr key={p.id} className="border-t"><td className="p-3 font-semibold">{p.plot_id}</td><td className="p-3">{p.location}</td><td className="p-3">{p.size_sqft} sq.ft</td><td className="p-3">{priceOf(p)}</td>
+ <td className="p-3"><select value={p.status} className="border rounded px-2 py-1" onChange={e=>act(()=>A('/properties/'+p.id+'/status',{method:'PATCH',body:JSON.stringify({status:e.target.value})}),'Status updated')}>{['AVAILABLE','BOOKED','SOLD'].map(s=><option key={s}>{s}</option>)}</select></td>
+ <td className="p-3">{p.photos.length}</td><td className="p-3 flex gap-3 flex-wrap"><a className="text-navy underline" href={'#/property/'+p.id}>View</a><button className="text-navy underline" onClick={()=>setEdit(p)}>Edit</button>
+ <button className="text-red-700 underline" onClick={()=>confirm(`Delete plot ${p.plot_id}? This also deletes its photos and cannot be undone.`)&&act(()=>A('/properties/'+p.id,{method:'DELETE'}),'Property deleted')}>Delete</button></td></tr>)}</tbody></table></div></>}
+ {tab==='bk'&&<List rows={bk} cols={r=>[r.created_at.slice(0,10),r.plot_id||'—',r.name,r.phone,(r.visit_date||'').slice(0,10)+' '+(r.visit_time||''),r.message]} head={['Received','Plot','Name','Phone','Visit','Message']} onStatus={(id,s)=>act(()=>A('/bookings/'+id,{method:'PATCH',body:JSON.stringify({status:s})}),'Updated')} opts={['NEW','CONFIRMED','COMPLETED','CANCELLED']}/>}
+ {tab==='en'&&<List rows={en} cols={r=>[r.created_at.slice(0,10),r.plot_id||'—',r.name,r.phone,r.email||'',r.message]} head={['Received','Plot','Name','Phone','Email','Message']} onStatus={(id,s)=>act(()=>A('/enquiries/'+id,{method:'PATCH',body:JSON.stringify({status:s})}),'Updated')} opts={['NEW','CONTACTED','CLOSED']}/>}</div>}
+
+const List=({rows,cols,head,onStatus,opts})=><div className="overflow-x-auto border rounded-xl"><table className="w-full text-sm"><thead className="bg-slate-50 text-left"><tr>{[...head,'Status'].map(h=><th key={h} className="p-3">{h}</th>)}</tr></thead><tbody>
+ {rows.length===0&&<tr><td className="p-4 text-slate-500" colSpan="7">Nothing here yet.</td></tr>}
+ {rows.map(r=><tr key={r.id} className="border-t">{cols(r).map((c,i)=><td key={i} className="p-3">{c}</td>)}<td className="p-3"><select className="border rounded px-2 py-1" value={r.status} onChange={e=>onStatus(r.id,e.target.value)}>{opts.map(o=><option key={o}>{o}</option>)}</select></td></tr>)}</tbody></table></div>;
+
+function PropForm({p,A,onDone,tok}){const isNew=!p.id;const [d,setD]=useState({...p}),[photos,setPhotos]=useState(p.photos||[]),[err,setErr]=useState(),[files,setFiles]=useState([]);
+ const set=k=>e=>setD({...d,[k]:e.target.type==='checkbox'?e.target.checked:e.target.value});
+ const refresh=async id=>setPhotos((await api('/properties/'+id)).photos);
+ const up=async id=>{if(!files.length)return;const fd=new FormData();[...files].forEach(f=>fd.append('photos',f));await api('/admin/properties/'+id+'/photos',{method:'POST',body:fd},tok)};
+ const save=async()=>{setErr();try{let id=p.id;if(isNew)id=(await A('/properties',{method:'POST',body:JSON.stringify(d)})).id;else await A('/properties/'+id,{method:'PUT',body:JSON.stringify(d)});await up(id);onDone()}catch(e){setErr(e.message)}};
+ const T=(k,label,t='text')=><Field key={k} label={label} type={t} value={d[k]??''} onChange={set(k)}/>;
+ return <div className="max-w-3xl mx-auto px-4 pt-10"><h1 className="font-serif text-2xl text-navy mb-5">{isNew?'Add property':'Edit '+p.plot_id}</h1><div className="grid md:grid-cols-2 gap-4">
+ {T('plot_id','Plot ID')}{T('title','Property title')}{T('location','Location')}{T('size_sqft','Plot size (sq.ft)','number')}{T('price','Price (₹)','number')}{T('price_per_sqft','Price per sq.ft (₹)','number')}{T('road_width','Road width')}{T('facing','Facing')}
+ <label className="flex items-center gap-2 text-sm md:col-span-2"><input type="checkbox" checked={!!d.price_on_request} onChange={set('price_on_request')}/>Show “Price on Request” instead of the price</label>
+ <label className="grid gap-1 text-sm font-medium">Status<select className="border rounded-lg px-3 py-2 font-normal" value={d.status} onChange={set('status')}>{['AVAILABLE','BOOKED','SOLD'].map(s=><option key={s}>{s}</option>)}</select></label>{T('maps_url','Google Maps URL (embed link shows a map)')}
+ {[['description','Description'],['amenities','Amenities (comma or new line)'],['landmarks','Nearby landmarks']].map(([k,l])=><label key={k} className="grid gap-1 text-sm font-medium md:col-span-2">{l}<textarea rows="3" className="border rounded-lg px-3 py-2 font-normal" value={d[k]??''} onChange={set(k)}/></label>)}</div>
+ <div className="mt-6"><b className="text-sm">Photos</b><div className="flex flex-wrap gap-3 mt-2">{photos.map(f=><div key={f.id} className="w-28 text-xs"><img src={f.url} className={`h-20 w-28 object-cover rounded ${f.is_main?'ring-2 ring-gold':''}`}/>
+ <button className="underline mr-2" disabled={f.is_main} onClick={async()=>{await A('/photos/'+f.id+'/main',{method:'PATCH'});refresh(p.id)}}>{f.is_main?'Main':'Make main'}</button>
+ <button className="text-red-700 underline" onClick={async()=>{if(confirm('Delete this photo?')){await A('/photos/'+f.id,{method:'DELETE'});refresh(p.id)}}}>Delete</button></div>)}</div>
+ <input type="file" multiple accept="image/jpeg,image/png,image/webp" className="mt-3 text-sm" onChange={e=>setFiles(e.target.files)}/></div>
+ {err&&<p className="text-red-700 text-sm mt-3" role="alert">{err}</p>}<div className="flex gap-3 mt-6"><Btn onClick={save}>Save property</Btn><Btn variant="navy" onClick={onDone}>Cancel</Btn></div></div>}
+
+const About=()=><Section title="About Us"><div className="max-w-3xl text-slate-600 grid gap-4"><p>Silkcity Property is a local real estate business helping families, first-time buyers and investors find residential plots they can trust.</p><p>Every listing shows its size, location, price and current status, and our team accompanies you on every site visit.</p></div></Section>;
+const Contact=()=><><Section title="Contact Us"><ContactBlock/><Enquiry/></Section></>;
+
+function App(){const h=useHash();const [path]=h.split('?');let v;
+ if(path==='/')v=<Home/>;else if(path==='/properties')v=<Properties/>;else if(path.startsWith('/property/'))v=<Detail id={path.split('/')[2]} key={path}/>;
+ else if(path==='/about')v=<About/>;else if(path==='/contact')v=<Contact/>;else if(path==='/book')v=<Book key={h}/>;else if(path==='/admin')v=<Admin/>;else v=<Home/>;
+ return <><Header/><main className="min-h-[60vh]">{v}</main><Footer/>
+ <a href={wa('Hello Silkcity Property, I would like to know more about your properties.')} aria-label="WhatsApp" className="fixed bottom-5 right-5 bg-emerald-600 text-white rounded-full w-14 h-14 grid place-items-center shadow-lg text-2xl">✆</a></>}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>
